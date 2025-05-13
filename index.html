@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Clientes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #239753b7;
+            --danger-color: #e74c3c;
+            --light-gray: #e3e3e3;
+        }
+
+        body {
+            background-color: var(--light-gray);
+            min-height: 100vh;
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 2rem;
+            background: #508650bc;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .main-container {
+            display: none;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: rgb(255, 255, 255);
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .client-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .client-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .status-active {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .status-inactive {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .search-box input {
+            padding-left: 35px;
+        }
+
+        .client-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-edit {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Form -->
+    <div class="login-container" id="loginForm">
+        <h2 class="text-center mb-4">Login</h2>
+        <form id="loginFormElement">
+            <div class="mb-3">
+                <label for="username" class="form-label">Usuário</label>
+                <input type="text" class="form-control" id="username" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Senha</label>
+                <input type="password" class="form-control" id="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Entrar</button>
+        </form>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container main-container" id="mainContent">
+        <div class="header d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">Sistema de Gestão de Clientes</h1>
+            <button class="btn btn-outline-light" onclick="logout()">
+                <i class="bi bi-box-arrow-right"></i> Sair
+            </button>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Pesquisar clientes...">
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-primary" onclick="toggleClientForm()">
+                    <i class="bi bi-plus-circle"></i> Novo Cliente
+                </button>
+            </div>
+        </div>
+
+        <div class="client-form" id="clientForm">
+            <h2 class="mb-4">Cadastro de Cliente</h2>
+            <form id="clientFormElement" onsubmit="handleSubmit(event)">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">Nome Completo</label>
+                        <input type="text" class="form-control" id="name" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="phone" class="form-label">Telefone</label>
+                        <input type="tel" class="form-control" id="phone" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="address" class="form-label">Endereço</label>
+                        <input type="text" class="form-control" id="address" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Observações</label>
+                    <textarea class="form-control" id="notes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="button" class="btn btn-secondary" onclick="toggleClientForm()">Cancelar</button>
+            </form>
+        </div>
+
+        <div id="clientsList">
+            <!-- Client cards will be inserted here -->
+        </div>
+    </div>
+
+    <div class="toast-container">
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Notificação</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Authentication
+        const ADMIN_USERNAME = 'admin';
+        const ADMIN_PASSWORD = 'admin123'; // In production, use proper password hashing
+
+        function showToast(message, type = 'success') {
+            const toast = document.querySelector('.toast');
+            const toastBody = toast.querySelector('.toast-body');
+            toastBody.textContent = message;
+            toast.classList.add(`bg-${type}`);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        }
+
+        // Login handling
+        document.getElementById('loginFormElement').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                localStorage.setItem('isLoggedIn', 'true');
+                showToast('Login realizado com sucesso!');
+            } else {
+                showToast('Usuário ou senha incorretos!', 'danger');
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+            showToast('Logout realizado com sucesso!');
+        }
+
+        // Check if user is already logged in
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }
+
+        // Client Management
+        let clients = JSON.parse(localStorage.getItem('clients')) || [];
+
+        function saveClients() {
+            localStorage.setItem('clients', JSON.stringify(clients));
+        }
+
+        function toggleClientForm() {
+            const form = document.getElementById('clientForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('clientFormElement').reset();
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            const formData = {
+                id: Date.now(),
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                notes: document.getElementById('notes').value,
+                status: 'active',
+                createdAt: new Date().toISOString()
+            };
+
+            clients.push(formData);
+            saveClients();
+            updateClientsList();
+            toggleClientForm();
+            showToast('Cliente cadastrado com sucesso!');
+        }
+
+        function updateClientsList() {
+            const container = document.getElementById('clientsList');
+            container.innerHTML = '';
+
+            clients.forEach(client => {
+                const card = document.createElement('div');
+                card.className = 'client-card';
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h3>${client.name}</h3>
+                            <p class="mb-1"><i class="bi bi-envelope"></i> ${client.email}</p>
+                            <p class="mb-1"><i class="bi bi-telephone"></i> ${client.phone}</p>
+                            <p class="mb-1"><i class="bi bi-geo-alt"></i> ${client.address}</p>
+                            ${client.notes ? `<p class="mb-1"><i class="bi bi-card-text"></i> ${client.notes}</p>` : ''}
+                        </div>
+                        <div class="text-end">
+                            <span class="status-badge status-${client.status}">
+                                ${client.status === 'active' ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="action-buttons mt-3">
+                        <button class="btn btn-edit" onclick="editClient(${client.id})">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        <button class="btn btn-delete" onclick="deleteClient(${client.id})">
+                            <i class="bi bi-trash"></i> Excluir
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+         // ...existing code...
+let editingClientId = null;
+
+// ...existing code...
+function editClient(id) {
+    const client = clients.find(c => c.id === id);
+    if (client) {
+        document.getElementById('name').value = client.name;
+        document.getElementById('email').value = client.email;
+        document.getElementById('phone').value = client.phone;
+        document.getElementById('address').value = client.address;
+        document.getElementById('notes').value = client.notes || '';
+        editingClientId = id;
+        toggleClientForm();
+    }
+}
+// ...existing code...
+function handleSubmit(event) {
+    event.preventDefault();
+    const formData = {
+        id: editingClientId ? editingClientId : Date.now(),
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        address: document.getElementById('address').value,
+        notes: document.getElementById('notes').value,
+        status: 'active',
+        createdAt: new Date().toISOString()
+    };
+
+    if (editingClientId) {
+        clients = clients.map(c => c.id === editingClientId ? formData : c);
+        editingClientId = null;
+    } else {
+        clients.push(formData);
+    }
+    saveClients();
+    updateClientsList();
+    toggleClientForm();
+    showToast('Cliente cadastrado com sucesso!');
+}
+
+function toggleClientForm() {
+    const form = document.getElementById('clientForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    document.getElementById('clientFormElement').reset();
+    editingClientId = null;
+}
+// ...existing code...
+        function editClient(id) {
+            const client = clients.find(c => c.id === id);
+            if (client) {
+                document.getElementById('name').value = client.name;
+                document.getElementById('email').value = client.email;
+                document.getElementById('phone').value = client.phone;
+                document.getElementById('address').value = client.address;
+                document.getElementById('notes').value = client.notes || '';
+                toggleClientForm();
+                clients = clients.filter(c => c.id !== id);
+                saveClients();
+            }
+        }
+
+        function deleteClient(id) {
+            if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                clients = clients.filter(client => client.id !== id);
+                saveClients();
+                updateClientsList();
+                showToast('Cliente excluído com sucesso!');
+            }
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredClients = clients.filter(client => 
+                client.name.toLowerCase().includes(searchTerm) ||
+                client.email.toLowerCase().includes(searchTerm) ||
+                client.phone.includes(searchTerm) ||
+                client.address.toLowerCase().includes(searchTerm)
+            );
+            
+            const container = document.getElementById('clientsList');
+            container.innerHTML = '';
+            
+            filteredClients.forEach(client => {
+                const card = document.createElement('div');
+                card.className = 'client-card';
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h3>${client.name}</h3>
+                            <p class="mb-1"><i class="bi bi-envelope"></i> ${client.email}</p>
+                            <p class="mb-1"><i class="bi bi-telephone"></i> ${client.phone}</p>
+                            <p class="mb-1"><i class="bi bi-geo-alt"></i> ${client.address}</p>
+                            ${client.notes ? `<p class="mb-1"><i class="bi bi-card-text"></i> ${client.notes}</p>` : ''}
+                        </div>
+                        <div class="text-end">
+                            <span class="status-badge status-${client.status}">
+                                ${client.status === 'active' ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="action-buttons mt-3">
+                        <button class="btn btn-edit" onclick="editClient(${client.id})">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        <button class="btn btn-delete" onclick="deleteClient(${client.id})">
+                            <i class="bi bi-trash"></i> Excluir
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        });
+        
+
+        // Initialize
+        updateClientsList();
+    </script>
+</body>
+</html>
